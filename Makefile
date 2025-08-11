@@ -37,7 +37,7 @@ plan:
 	terraform show -json $(PLAN_BINARY) > $(PLAN_JSON)
 
 # Run Conftest tests
-test:
+test_policy:
 	@echo "Running Conftest tests..."
 	conftest test $(PLAN_JSON) --all-namespaces
 
