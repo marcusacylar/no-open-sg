@@ -4,7 +4,7 @@
 CONTEST_VERSION=0.47.0
 TERRAFORM_VERSION=1.9.5
 PLAN_BINARY=tfplan.binary
-PLAN_JSON=input.json
+PLAN_JSON=bad-policy.json
 
 .PHONY: all install_conftest install_terraform plan test clean
 
