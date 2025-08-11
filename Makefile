@@ -1,29 +1,50 @@
-# Makefile for no-public-s3 lab
+# Makefile for Policy-as-Code Labs
+# Handles installation, plan generation, and Conftest tests
 
 CONTEST_VERSION=0.47.0
-CONTEST_URL=https://github.com/open-policy-agent/conftest/releases/download/v$(CONTEST_VERSION)/conftest_$(CONTEST_VERSION)_Linux_x86_64.tar.gz
+TERRAFORM_VERSION=1.9.5
+PLAN_BINARY=tfplan.binary
+PLAN_JSON=input.json
 
-.PHONY: all install test clean
+.PHONY: all install_conftest install_terraform plan test clean
 
-all: install test
+# Run everything
+all: install_conftest install_terraform plan test
 
-install:
-	wget -q $(CONTEST_URL) -O conftest.tar.gz
+# Install Conftest
+install_conftest:
+	@echo "Installing Conftest..."
+	wget -q https://github.com/open-policy-agent/conftest/releases/download/v$(CONTEST_VERSION)/conftest_$(CONTEST_VERSION)_Linux_x86_64.tar.gz -O conftest.tar.gz
 	tar -xzf conftest.tar.gz
 	sudo mv conftest /usr/local/bin/
 	rm conftest.tar.gz
-	@echo "Conftest installed successfully!"
 	conftest --version
 
-test:
-	conftest test input.json --all-namespaces
+# Install Terraform
+install_terraform:
+	@echo "Installing Terraform..."
+	curl -fsSL https://releases.hashicorp.com/terraform/$(TERRAFORM_VERSION)/terraform_$(TERRAFORM_VERSION)_linux_amd64.zip -o terraform.zip
+	unzip terraform.zip
+	sudo mv terraform /usr/local/bin/
+	rm terraform.zip
+	terraform -version
 
+# Generate Terraform plan and JSON
+plan:
+	@echo "Generating Terraform plan..."
+	terraform init -input=false
+	terraform plan -out=$(PLAN_BINARY) -input=false
+	terraform show -json $(PLAN_BINARY) > $(PLAN_JSON)
+
+# Run Conftest tests
+test:
+	@echo "Running Conftest tests..."
+	conftest test $(PLAN_JSON) --all-namespaces
+
+# Cleanup
 clean:
-	rm -f conftest.tar.gz
+	rm -f $(PLAN_BINARY) $(PLAN_JSON)
 	@echo "Cleanup complete!"
 
-# Use this for later - run below in Codespaces terminal
-# make install   # Installs conftest
-# make test      # Runs your Rego test
-# make           # Does both install and test
-# make clean     # Cleans up any leftovers
+# Run this when it's time
+# make all
